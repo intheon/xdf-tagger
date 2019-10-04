@@ -351,6 +351,9 @@ def process_file(inpath, outpath, *, to_set, to_clear, to_show, overwrite=False)
                 chunkbytes = struct.pack('<L', meta_id) + new_content.encode('utf-8')
                 write_chunk(outf, tag=ChunkTags.STREAM_HEADER_TAG, content=chunkbytes)
 
+                # skip original version of header in input file
+                inf.seek(meta_begin + meta_len)
+
                 # finally copy the remainder of the file
                 copy_range(inf, outf, in_size - meta_begin - meta_len)
             else:
