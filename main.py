@@ -77,7 +77,13 @@ def write_varlen_int(i, fp):
 
 
 def write_chunk(fp, tag, content):
-    """Write a chunk into an XDF file handle."""
+    """Write a chunk into an XDF file handle.
+
+    Args:
+        fp: file handle to use
+        tag: chunk tag (see ChunkTags)
+        content: byte content of the chunk
+    """
     # write [NumLengthBytes] and [Length]
     write_varlen_int(len(content)+2, fp=fp)
     # write [Tag]
@@ -88,7 +94,7 @@ def write_chunk(fp, tag, content):
 
 def scan_forward(f):
     """Scan forward through the given file object until after the next
-    boundary chunk."""
+    boundary chunk. This can be used for seeking or to skip corruptions."""
     blocklen = 2**20
     signature = bytes([0x43, 0xA5, 0x46, 0xDC, 0xCB, 0xF5, 0x41, 0x0F,
                        0xB3, 0x0E, 0xD5, 0x46, 0x73, 0x83, 0xCB, 0xE4])
@@ -115,7 +121,7 @@ def xml2dict(t):
 
 
 def matching_pathnames(paths):
-    """Get list of matching pathnames."""
+    """Get list of matching pathnames for the given list of glob patterns."""
     results = []
     for p in paths:
         results.extend(glob.glob(p, recursive=True))
@@ -125,7 +131,19 @@ def matching_pathnames(paths):
 def gen_outpath(inpath, suffix, inplace):
     """Derive the output path for a given input path. Also returns whether
     the path is a temp pathname that shall be renamed to the original input
-    path at the end."""
+    path at the end.
+
+    Args:
+        inpath: path to input file
+        suffix: the suffix to append to create the output path (e.g., 'processed')
+        inplace: whether the input file is being processed in-place
+
+    Returns:
+        outpath: new path
+        is_tempppath: whether the output path is a temp file that shall later be
+          deleted
+
+    """
     if inplace or not suffix:
         outpath = inpath + '.%i.tmp' % random.randint(10000, 99999)
         is_temppath = True
@@ -264,7 +282,25 @@ def get_metadata_content(fh, filepath):
 
 
 def process_metadata_content(content, *, to_set, to_clear, to_show):
-    """Process the given XML content string of the metadata chunk."""
+    """Process the given XML content string of the metadata chunk.
+
+    Args:
+        content: XML string
+        to_set: list of "set" command-line directives (values to set, currently
+          the only accepted form is 'name=value')
+        to_clear: list of "clear" command-line directives (values to clear, just
+          given as a list of field names)
+        to_show: list of "show" directives (values to display, just a list of
+          field names)
+
+    Notes:
+        field names can be given in the form "subject.age", which resolves to
+        a path in the XML of the form desc/subject/age -- i.e., all custom
+        fields are implicitly under "desc" (as per XDF standard)
+
+    Returns:
+        the updated content string
+    """
     root = et.fromstring(content)
     desc = root.find('desc')
     for name in (to_show or []):
@@ -309,7 +345,13 @@ def process_metadata_content(content, *, to_set, to_clear, to_show):
 
 def copy_range(inf, outf, length, blocksize=65536):
     """Copy a range from one file handle to another at the current respective
-    positions."""
+    positions.
+
+    Args:
+        inf: input file handle to read from
+        outf: output file handle to write to
+        blocksize: block size to use for copying, in bytes
+    """
     while length >= blocksize:
         outf.write(inf.read(blocksize))
         length -= blocksize
@@ -318,7 +360,18 @@ def copy_range(inf, outf, length, blocksize=65536):
 
 
 def process_file(inpath, outpath, *, to_set, to_clear, to_show, overwrite=False):
-    """Process the given file, optionally writing the result into outpath."""
+    """Process the given file, optionally writing the result into outpath.
+
+    Args:
+        inpath: input path
+        outpath: output path
+        to_set: list of "set" directives from the command-line
+        to_clear: list of "clear" directives
+        to_show: list of "show" directives
+        overwrite: whether the --overwrite option was given, allowing existing
+          files to be overwritten
+
+    """
     logger.info("Processing file %s..." % inpath)
 
     # number of bytes in the file
