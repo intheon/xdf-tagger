@@ -1,13 +1,14 @@
 # xdf-tagger
-Simple command-line tool for adding/removing metadata tags from XDF files
-        
-Tags will be written into a stream named Metadata, of type Metadata, 
-and the stream will be created if not already present.
+This is a simple command-line tool for adding/removing metadata tags from one 
+or more XDF files. You can run it as in the example:
 
-You can use arguments like --set and --clear multiple times to set/clear
-multiple tags in a single run of the tool.
+```
+xdf-tagger.py --set subject.name="My Name" --set subject.id=subj001 --clear subject.handedness --show subject.age *.xdf
+```
 
-Example:
-```
-xdf-tagger --set subject.name="My Name" --set subject.id=subj001 --clear subject.handedness --show subject.age *.xdf
-```
+This script writes tags into a stream named `Metadata`, with type `Metadata`,
+which will be created if not already present. This way, tags managed by this 
+script are sandboxed from other meta-data.
+
+The script can be used to associate, for instance, human-subject or experiment
+metadata as defined in the [XDF specification](https://github.com/sccn/xdf/wiki/Meta-Data).
