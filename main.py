@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Command-line tool for managing metadata tags in XDF files.
 Copyright (c) 2019 Syntrogi Inc dba Intheon. All Rights Reserved.
 
